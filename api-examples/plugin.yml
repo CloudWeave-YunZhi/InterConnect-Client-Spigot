@@ -1,0 +1,42 @@
+# Example plugin.yml for the ExamplePlugin
+
+name: InterConnectExample
+version: 1.0.0
+main: com.example.interconnectdemo.ExamplePlugin
+api-version: 1.13
+author: CloudWeave-YunZhi
+
+# Important: Declare dependency on InterConnect
+depend: [InterConnect-Client-Spigot]
+
+# Or use soft-depend if your plugin works without InterConnect:
+# softdepend: [InterConnect-Client-Spigot]
+
+commands:
+  broadcastserver:
+    description: Broadcast a message to all connected servers
+    usage: /broadcastserver <message>
+    permission: example.broadcast
+  
+  requestteleport:
+    description: Request a teleport to a location on another server
+    usage: /requestteleport <target>
+    permission: example.teleport
+  
+  icstatus:
+    description: Check InterConnect status
+    usage: /icstatus
+    permission: example.status
+
+permissions:
+  example.broadcast:
+    description: Allow broadcasting to all servers
+    default: op
+  
+  example.teleport:
+    description: Allow requesting teleports
+    default: op
+  
+  example.status:
+    description: Allow checking InterConnect status
+    default: op

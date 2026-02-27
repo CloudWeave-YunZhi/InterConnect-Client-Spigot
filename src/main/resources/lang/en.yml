@@ -1,0 +1,87 @@
+# =============================================
+# InterConnect-Client-Spigot English Language File
+# =============================================
+
+# Message prefix
+prefix: "&6[InterConnect] "
+
+# General messages
+general:
+  loading: "&eLoading..."
+  enabled: "&aPlugin enabled successfully! Version: &f%version%"
+  disabled: "&cPlugin disabled!"
+  no-permission: "&cYou don't have permission to do this. Required: &7%permission%"
+  player-only: "&cThis command can only be executed by a player."
+  console-only: "&cThis command can only be executed by console."
+  invalid-args: "&cInvalid arguments. Usage: &7%usage%"
+
+# Connection messages
+connection:
+  connecting: "&eConnecting to InterConnect-Server..."
+  connected: "&aSuccessfully connected to InterConnect-Server!"
+  disconnected: "&cDisconnected from InterConnect-Server."
+  already-connected: "&aAlready connected to InterConnect-Server!"
+  not-connected: "&cNot connected to InterConnect-Server!"
+  reconnecting: "&eAttempting to reconnect in &f%seconds% &eseconds... (Attempt &f%attempt%&)"
+  max-reconnect: "&cMax reconnection attempts reached. Giving up."
+  config-incomplete: "&cConfiguration incomplete! Please set server.uuid and server.token in config.yml"
+
+# Reload messages
+reload:
+  reloading: "&eReloading configuration..."
+  success: "&aConfiguration reloaded successfully!"
+  failed: "&cFailed to reload configuration: &f%error%"
+
+# Test messages
+test:
+  testing: "&eTesting connection to InterConnect-Server..."
+  success: "&aTest message sent successfully!"
+  failed: "&cTest failed: &f%error%"
+
+# Status messages
+status:
+  header: "&6========== &bInterConnect Status &6=========="
+  version: "&ePlugin Version: &f%version%"
+  server-name: "&eServer Name: &f%name%"
+  connection-status: "&eConnection Status:"
+  server-url: "&eServer URL: &f%url%"
+  uuid: "&eUUID: &f%uuid%"
+  token: "&eToken: &f%token%"
+  event-sync: "&eEvent Sync Settings:"
+  event-join: "  &7Player Join: %status%"
+  event-quit: "  &7Player Quit: %status%"
+  event-death: "  &7Player Death: %status%"
+  event-chat: "  &7Player Chat: %status%"
+  event-message: "  &7Player Message: %status%"
+  footer: "&6======================================"
+
+# Help messages
+help:
+  header: "&6========== &bInterConnect Commands &6=========="
+  reload: "&e/ic reload &7- Reload the configuration"
+  test: "&e/ic test &7- Test connection to server"
+  status: "&e/ic status &7- Show connection status"
+  connect: "&e/ic connect &7- Manually connect to server"
+  disconnect: "&e/ic disconnect &7- Disconnect from server"
+  version: "&e/ic version &7- Show version information"
+  help: "&e/ic help &7- Show this help message"
+  permission: "&6Permission: &7interconnect.admin"
+  footer: "&6======================================"
+
+# Version info
+version:
+  info: "&bVersion: &f%version%"
+  author: "&bAuthor: &fCloudWeave-YunZhi"
+  github: "&bGitHub: &fhttps://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot"
+  license: "&bLicense: &fGNU GPL v3.0"
+
+# Cross-server message formats
+cross-server:
+  player-join: "&7[&b%server%&7] &a+ &f%player% &ajoined the network"
+  player-quit: "&7[&b%server%&7] &c- &f%player% &cleft the network"
+  player-death: "&7[&b%server%&7] &4☠ &f%message%"
+  player-chat: "&7[&b%server%&7] &f%player%&7: &f%message%"
+
+# Status display
+enabled: "&aEnabled"
+disabled: "&cDisabled"

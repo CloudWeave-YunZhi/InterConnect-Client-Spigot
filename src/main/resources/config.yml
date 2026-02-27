@@ -1,0 +1,110 @@
+# =============================================
+# InterConnect-Client-Spigot Configuration
+# =============================================
+# 
+# This plugin connects your Minecraft server to InterConnect-Server
+# for cross-server player event synchronization.
+#
+# GitHub: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot
+# License: GNU General Public License v3.0
+#
+# IMPORTANT: You must configure your UUID and Token from the
+# InterConnect-Server before this plugin can function properly.
+# 
+# Use the InterConnect-Server CLI to create a node:
+#   npm run start add-node <servername>
+#
+# Or use the REST API:
+#   POST /manager/keys/:servername
+#
+# =============================================
+
+# ---------------------------------------------
+# General Settings
+# ---------------------------------------------
+# Language file to use (located in plugins/InterConnect-Client-Spigot/lang/)
+# Available: en, zh_CN
+language: zh_CN
+
+# Check for updates on startup and notify admins
+check-for-updates: true
+
+# ---------------------------------------------
+# Server Connection Settings
+# ---------------------------------------------
+server:
+  # WebSocket URL of your InterConnect-Server
+  # Default: ws://localhost:8000/ws
+  url: "ws://localhost:8000/ws"
+  
+  # Your server's unique identifier (UUID)
+  # Get this from the InterConnect-Server when you register your node
+  # Example: "550e8400-e29b-41d4-a716-446655440000"
+  uuid: ""
+  
+  # Your server's authentication token
+  # Get this from the InterConnect-Server when you register your node
+  # WARNING: Keep this secret! Treat it like a password.
+  token: ""
+  
+  # Display name for your server (shown in cross-server messages)
+  # This should match the servername used when registering the node
+  name: "MyServer"
+  
+  # Automatically connect to InterConnect-Server on plugin enable
+  auto-connect: true
+
+# ---------------------------------------------
+# Event Synchronization Settings
+# ---------------------------------------------
+# Set to 'true' to broadcast these events to other servers
+# Set to 'false' to keep them local only
+
+events:
+  # Broadcast when a player joins the server
+  sync-player-join: true
+  
+  # Broadcast when a player leaves the server
+  sync-player-quit: true
+  
+  # Broadcast when a player dies
+  sync-player-death: true
+  
+  # Broadcast player chat messages (legacy events)
+  sync-player-chat: true
+  
+  # Broadcast player messages (modern events)
+  sync-player-message: true
+
+# ---------------------------------------------
+# Connection Settings
+# ---------------------------------------------
+connection:
+  # Interval between reconnection attempts (in seconds)
+  reconnect-interval: 5
+  
+  # Maximum number of reconnection attempts (0 = unlimited)
+  reconnect-max-attempts: 10
+  
+  # Heartbeat interval to detect connection loss (in seconds)
+  # The plugin will send a ping every N seconds and expect a pong response
+  # If no pong is received, the connection will be considered dead and reconnected
+  heartbeat-interval: 30
+  
+  # Enable debug mode for verbose logging
+  # This will output detailed WebSocket communication logs
+  debug-mode: false
+
+# ---------------------------------------------
+# API Settings (for developers)
+# ---------------------------------------------
+api:
+  # Enable the public API for other plugins
+  enabled: true
+  
+  # Allow other plugins to send custom messages
+  allow-custom-messages: true
+
+# =============================================
+# End of Configuration
+# =============================================

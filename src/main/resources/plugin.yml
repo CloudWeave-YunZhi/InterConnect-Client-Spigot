@@ -1,0 +1,57 @@
+# InterConnect-Client-Spigot
+# A Minecraft Spigot plugin for InterConnect Server
+# 
+# GitHub: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot
+# License: GNU General Public License v3.0
+
+name: InterConnect-Client-Spigot
+version: ${project.version}
+main: com.cloudweave.yunzhi.interconnect.InterConnectPlugin
+api-version: 1.13
+author: CloudWeave-YunZhi
+website: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot
+
+# Plugin description
+description: |
+  Minecraft Spigot plugin for InterConnect Server.
+  Enables cross-server player event synchronization via WebSocket.
+
+# Commands
+commands:
+  ic:
+    description: InterConnect main command
+    usage: /ic <reload|test|status|connect|disconnect|help>
+    permission: interconnect.admin
+    permission-message: "§cYou don't have permission to use this command."
+
+# Permissions
+permissions:
+  interconnect.admin:
+    description: Allows access to all InterConnect commands
+    default: op
+    children:
+      interconnect.reload: true
+      interconnect.test: true
+      interconnect.status: true
+      interconnect.connect: true
+      interconnect.disconnect: true
+  
+  interconnect.reload:
+    description: Allows reloading the configuration
+    default: op
+  
+  interconnect.test:
+    description: Allows testing API connectivity
+    default: op
+  
+  interconnect.status:
+    description: Allows checking connection status
+    default: op
+  
+  interconnect.connect:
+    description: Allows connecting to InterConnect-Server
+    default: op
+  
+  interconnect.disconnect:
+    description: Allows disconnecting from InterConnect-Server
+    default: op

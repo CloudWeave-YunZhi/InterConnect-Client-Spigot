@@ -1,0 +1,87 @@
+# =============================================
+# InterConnect-Client-Spigot 简体中文语言文件
+# =============================================
+
+# 消息前缀
+prefix: "&6[InterConnect] "
+
+# 通用消息
+general:
+  loading: "&e正在加载..."
+  enabled: "&a插件已成功启用！版本: &f%version%"
+  disabled: "&c插件已禁用！"
+  no-permission: "&c你没有权限执行此操作。需要权限: &7%permission%"
+  player-only: "&c此命令只能由玩家执行。"
+  console-only: "&c此命令只能由控制台执行。"
+  invalid-args: "&c参数错误。用法: &7%usage%"
+
+# 连接相关消息
+connection:
+  connecting: "&e正在连接到 InterConnect-Server..."
+  connected: "&a成功连接到 InterConnect-Server！"
+  disconnected: "&c已与 InterConnect-Server 断开连接。"
+  already-connected: "&a已经连接到 InterConnect-Server！"
+  not-connected: "&c未连接到 InterConnect-Server！"
+  reconnecting: "&e将在 &f%seconds% &e秒后尝试重新连接... (第 &f%attempt% &e次尝试)"
+  max-reconnect: "&c已达到最大重连次数，放弃重连。"
+  config-incomplete: "&c配置不完整！请在 config.yml 中设置 server.uuid 和 server.token"
+
+# 重载相关消息
+reload:
+  reloading: "&e正在重载配置文件..."
+  success: "&a配置文件重载成功！"
+  failed: "&c配置文件重载失败: &f%error%"
+
+# 测试相关消息
+test:
+  testing: "&e正在测试与 InterConnect-Server 的连接..."
+  success: "&a测试消息发送成功！"
+  failed: "&c测试失败: &f%error%"
+
+# 状态相关消息
+status:
+  header: "&6========== &bInterConnect 状态 &6=========="
+  version: "&e插件版本: &f%version%"
+  server-name: "&e服务器名称: &f%name%"
+  connection-status: "&e连接状态:"
+  server-url: "&e服务器地址: &f%url%"
+  uuid: "&eUUID: &f%uuid%"
+  token: "&eToken: &f%token%"
+  event-sync: "&e事件同步设置:"
+  event-join: "  &7玩家加入: %status%"
+  event-quit: "  &7玩家离开: %status%"
+  event-death: "  &7玩家死亡: %status%"
+  event-chat: "  &7玩家聊天: %status%"
+  event-message: "  &7玩家消息: %status%"
+  footer: "&6======================================"
+
+# 帮助消息
+help:
+  header: "&6========== &bInterConnect 指令帮助 &6=========="
+  reload: "&e/ic reload &7- 重载配置文件"
+  test: "&e/ic test &7- 测试与服务器的连接"
+  status: "&e/ic status &7- 显示连接状态"
+  connect: "&e/ic connect &7- 手动连接到服务器"
+  disconnect: "&e/ic disconnect &7- 断开服务器连接"
+  version: "&e/ic version &7- 显示版本信息"
+  help: "&e/ic help &7- 显示此帮助信息"
+  permission: "&6权限: &7interconnect.admin"
+  footer: "&6======================================"
+
+# 版本信息
+version:
+  info: "&b版本: &f%version%"
+  author: "&b作者: &fCloudWeave-YunZhi"
+  github: "&bGitHub: &fhttps://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot"
+  license: "&b许可证: &fGNU GPL v3.0"
+
+# 跨服消息格式
+cross-server:
+  player-join: "&7[&b%server%&7] &a+ &f%player% &a加入了网络"
+  player-quit: "&7[&b%server%&7] &c- &f%player% &c离开了网络"
+  player-death: "&7[&b%server%&7] &4☠ &f%message%"
+  player-chat: "&7[&b%server%&7] &f%player%&7: &f%message%"
+
+# 状态显示
+enabled: "&a已启用"
+disabled: "&c已禁用"
