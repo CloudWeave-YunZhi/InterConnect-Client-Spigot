@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+
+## [1.0.1] - 2026-03-15
+
+### Fixed
+- Fixed WebSocket auto-reconnection failure after disconnection
+  - Clear `webSocketClient` reference in `onClose` callback to ensure `connect()` works properly on next attempt
+  - Strengthen double-check in `scheduleReconnect()` to prevent "Already connected or connecting!" errors in race conditions
+
+### Changed
+- Cleaned up unused imports and variables
+  - Removed unused `Player` and `IOException` imports in `MessageManager`
+  - Removed unused `plugin` field in `PlayerEventListener`
+  - Removed unused `ConcurrentHashMap` import and `time` variable in `WebSocketManager`
+
+## [1.0.0] - 2026-02-27
 
 ### Added
 - Initial plugin structure
@@ -18,8 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-language support framework
 - bStats metrics integration
 - Update checker
-
-## [1.0.0] - 2024-02-27
 
 ### Added
 - First stable release
@@ -39,5 +51,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secure header transmission
 - Configurable reconnect limits
 
-[Unreleased]: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot/compare/v1.0.0...HEAD
+[1.0.1]: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CloudWeave-YunZhi/InterConnect-Client-Spigot/releases/tag/v1.0.0

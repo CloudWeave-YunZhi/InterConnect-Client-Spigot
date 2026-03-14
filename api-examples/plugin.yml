@@ -1,7 +1,7 @@
 # Example plugin.yml for the ExamplePlugin
 
 name: InterConnectExample
-version: 1.0.0
+version: 1.0.1
 main: com.example.interconnectdemo.ExamplePlugin
 api-version: 1.13
 author: CloudWeave-YunZhi

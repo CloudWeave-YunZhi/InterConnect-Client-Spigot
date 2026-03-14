@@ -22,7 +22,7 @@
 
 ## 安装方法
 
-1. 从 [Releases](../../releases) 下载 `ICC-Spigot-1.0.0.jar`
+1. 从 [Releases](../../releases) 下载 `ICC-Spigot-1.0.1.jar`
 2. 将 jar 文件放入服务器的 `plugins/` 目录
 3. 重启服务器或使用插件管理器加载
 4. 编辑 `plugins/InterConnect-Client-Spigot/config.yml` 配置文件
@@ -97,7 +97,7 @@ cd InterConnect-Client-Spigot
 # 使用 Maven 构建
 mvn clean package
 
-# 构建后的 jar 位于 target/ICC-Spigot-1.0.0.jar
+# 构建后的 jar 位于 target/ICC-Spigot-1.0.1.jar
 ```
 
 ## 依赖项

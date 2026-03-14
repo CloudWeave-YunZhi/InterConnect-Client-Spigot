@@ -15,7 +15,7 @@ Download the latest release from [GitHub Releases](../../releases).
 ### 2. Install the Plugin
 
 1. Stop your Minecraft server
-2. Place the downloaded `ICC-Spigot-1.0.0.jar` file into your server's `plugins/` folder
+2. Place the downloaded `ICC-Spigot-1.0.1.jar` file into your server's `plugins/` folder
 3. Start your server
 
 ### 3. Configure the Plugin
