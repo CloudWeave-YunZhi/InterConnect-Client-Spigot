@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -101,6 +101,7 @@ public class WebSocketManager {
                 public void onClose(int code, String reason, boolean remote) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         connected = false;
+                        webSocketClient = null;  // 清理引用，允许重新连接
                         stopHeartbeat();
                         if (remote) {
                             plugin.getLogger().warning("Connection closed by server. Code: " + code + ", Reason: " + reason);
@@ -255,7 +256,6 @@ public class WebSocketManager {
             String fromName = packet.optString("fromName", "Unknown Server");
             String type = packet.optString("type", "");
             JSONObject msgData = packet.optJSONObject("msg");
-            long time = packet.optLong("time", System.currentTimeMillis());
 
             plugin.getConfigManager().debug("Received message from " + fromName + " [" + fromId + "]: " + type);
 
@@ -395,7 +395,8 @@ public class WebSocketManager {
         plugin.getLogger().info("Attempting to reconnect in " + interval + " seconds... (Attempt " + reconnectAttempts + ")");
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-            if (!connected) {
+            // 双重检查：只有真正未连接且没有正在连接的客户端时才连接
+            if (!connected && webSocketClient == null) {
                 connect();
             }
         }, interval * 20L); // Convert seconds to ticks

@@ -26,13 +26,11 @@ import org.json.JSONObject;
 
 public class PlayerEventListener implements Listener {
 
-    private final InterConnectPlugin plugin;
     private final WebSocketManager webSocketManager;
     private final ConfigManager configManager;
     private final Logger logger;
 
     public PlayerEventListener(InterConnectPlugin plugin) {
-        this.plugin = plugin;
         this.webSocketManager = plugin.getWebSocketManager();
         this.configManager = plugin.getConfigManager();
         this.logger = new Logger(plugin, "PlayerEventListener");
