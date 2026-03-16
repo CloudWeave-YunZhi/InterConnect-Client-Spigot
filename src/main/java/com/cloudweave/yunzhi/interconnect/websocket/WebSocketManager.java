@@ -150,7 +150,6 @@ public class WebSocketManager {
             webSocketClient = null;
         }
         connected = false;
-        reconnectAttempts = 0;
         plugin.getLogger().info("Disconnected from InterConnect-Server");
     }
 
