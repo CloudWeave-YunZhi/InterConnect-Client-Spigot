@@ -88,4 +88,13 @@ public class WebSocketManagerTest {
         assertEquals("player_chat", WebSocketManager.EVENT_PLAYER_CHAT);
         assertEquals("player_message", WebSocketManager.EVENT_PLAYER_MESSAGE);
     }
+
+    @Test
+    @DisplayName("Should validate supported event types using current server protocol")
+    void testSupportedEventTypes() {
+        assertTrue(WebSocketManager.isSupportedEventType("player_join"));
+        assertTrue(WebSocketManager.isSupportedEventType("player_message"));
+        assertFalse(WebSocketManager.isSupportedEventType("custom_event"));
+        assertFalse(WebSocketManager.isSupportedEventType("heartbeat"));
+    }
 }

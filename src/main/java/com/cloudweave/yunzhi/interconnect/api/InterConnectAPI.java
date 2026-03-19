@@ -11,6 +11,7 @@
 package com.cloudweave.yunzhi.interconnect.api;
 
 import com.cloudweave.yunzhi.interconnect.InterConnectPlugin;
+import com.cloudweave.yunzhi.interconnect.websocket.WebSocketManager;
 import org.bukkit.entity.Player;
 import org.json.JSONObject;
 
@@ -26,12 +27,12 @@ import javax.annotation.Nullable;
  * <pre>
  * InterConnectAPI api = InterConnectAPI.getInstance();
  * if (api != null && api.isConnected()) {
- *     api.broadcastMessage("custom_event", "Hello from my plugin!");
+ *     api.broadcastMessage("player_message", "Hello from my plugin!");
  * }
  * </pre>
  * 
  * @author CloudWeave-YunZhi
- * @version 1.0.0
+ * @version 1.1.0
  */
 public class InterConnectAPI {
 
@@ -83,9 +84,9 @@ public class InterConnectAPI {
     }
 
     /**
-     * Broadcast a custom message to all connected servers.
+     * Broadcast a message to all connected servers.
      * 
-     * @param eventType The custom event type
+     * @param eventType One of the event types supported by InterConnect-Server
      * @param message The message to broadcast
      * @return true if the message was sent successfully
      */
@@ -94,17 +95,24 @@ public class InterConnectAPI {
             return false;
         }
 
+        if (!WebSocketManager.EVENT_PLAYER_MESSAGE.equals(eventType)
+            && !WebSocketManager.EVENT_PLAYER_CHAT.equals(eventType)) {
+            plugin.getLogger().warning("broadcastMessage only supports player_message or player_chat");
+            return false;
+        }
+
         JSONObject data = new JSONObject();
-        data.put("message", message);
+        data.put("playerName", getServerName());
+        data.put("text", message);
         data.put("serverName", getServerName());
 
         return plugin.getWebSocketManager().broadcast(eventType, data);
     }
 
     /**
-     * Broadcast a custom JSON message to all connected servers.
+     * Broadcast a JSON message to all connected servers.
      * 
-     * @param eventType The custom event type
+     * @param eventType One of the event types supported by InterConnect-Server
      * @param data The JSON data to broadcast
      * @return true if the message was sent successfully
      */
@@ -125,7 +133,7 @@ public class InterConnectAPI {
      * Send a message to a specific server.
      * 
      * @param targetUuid The target server's UUID
-     * @param eventType The event type
+     * @param eventType One of the event types supported by InterConnect-Server
      * @param data The JSON data to send
      * @return true if the message was sent successfully
      */
@@ -191,7 +199,7 @@ public class InterConnectAPI {
     }
 
     /**
-     * Register a message listener for custom events.
+     * Register a message listener for forwarded server events.
      * 
      * @param listener The listener to register
      */
@@ -234,5 +242,15 @@ public class InterConnectAPI {
      */
     public void debug(@Nonnull String message) {
         plugin.getConfigManager().debug(message);
+    }
+
+    /**
+     * Check whether an event type is supported by the current InterConnect-Server protocol.
+     *
+     * @param eventType The event type to validate
+     * @return true if the server protocol supports this event type
+     */
+    public boolean isSupportedEventType(@Nonnull String eventType) {
+        return WebSocketManager.isSupportedEventType(eventType);
     }
 }

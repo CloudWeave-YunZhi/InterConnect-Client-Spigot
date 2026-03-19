@@ -121,7 +121,7 @@ public class InterConnectCommand implements CommandExecutor, TabCompleter {
 
             JSONObject testData = new JSONObject();
             testData.put("playerName", sender.getName());
-            testData.put("text", "Connection test from " + plugin.getConfigManager().getServerName());
+            testData.put("text", "Connection test from node " + plugin.getConfigManager().getServerName());
             
             boolean success = wsManager.broadcast("player_message", testData);
             
@@ -148,7 +148,7 @@ public class InterConnectCommand implements CommandExecutor, TabCompleter {
         
         // Plugin info
         sender.sendMessage("§ePlugin Version: §f" + plugin.getDescription().getVersion());
-        sender.sendMessage("§eServer Name: §f" + plugin.getConfigManager().getServerName());
+        sender.sendMessage("§eConfigured Node Name: §f" + plugin.getConfigManager().getServerName());
         sender.sendMessage("");
         
         // Connection status

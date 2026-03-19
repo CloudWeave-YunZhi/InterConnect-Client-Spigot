@@ -15,14 +15,14 @@ import org.json.JSONObject;
 import javax.annotation.Nonnull;
 
 /**
- * Message listener interface for receiving custom events from other servers.
+ * Message listener interface for receiving events from other servers.
  * 
  * <p>Usage example:</p>
  * <pre>
  * public class MyListener implements MessageListener {
  *     @Override
- *     public void onMessageReceived(String fromServer, String eventType, JSONObject data) {
- *         if ("my_custom_event".equals(eventType)) {
+ *     public void onMessageReceived(String fromServer, String fromUuid, String eventType, JSONObject data) {
+ *         if ("player_message".equals(eventType)) {
  *             // Handle the event
  *         }
  *     }
@@ -34,7 +34,7 @@ import javax.annotation.Nonnull;
  * </pre>
  * 
  * @author CloudWeave-YunZhi
- * @version 1.0.0
+ * @version 1.1.0
  */
 public interface MessageListener {
 
@@ -43,7 +43,7 @@ public interface MessageListener {
      * 
      * @param fromServer The name of the server that sent the message
      * @param fromUuid The UUID of the server that sent the message
-     * @param eventType The type of event
+     * @param eventType The type of event forwarded by InterConnect-Server
      * @param data The event data as a JSONObject
      */
     void onMessageReceived(@Nonnull String fromServer, @Nonnull String fromUuid, 

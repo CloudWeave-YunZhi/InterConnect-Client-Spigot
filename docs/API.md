@@ -2,30 +2,36 @@
 
 ## Overview
 
-InterConnect provides a public API that allows other plugins to interact with the WebSocket connection and send/receive custom messages across servers.
+InterConnect exposes a public API for Spigot plugins that want to interact with the current InterConnect-Server WebSocket protocol.
+
+The current server implementation forwards only these event types:
+
+- `player_join`
+- `player_quit`
+- `player_death`
+- `player_chat`
+- `player_message`
+
+If you try to send any other event type, the client now rejects it locally and returns `false`.
 
 ## Getting Started
-
-### Obtaining the API Instance
 
 ```java
 import com.cloudweave.yunzhi.interconnect.api.InterConnectAPI;
 
 public class MyPlugin extends JavaPlugin {
-    
+
     private InterConnectAPI interConnectAPI;
-    
+
     @Override
     public void onEnable() {
-        // Get the API instance
         interConnectAPI = InterConnectAPI.getInstance();
-        
+
         if (interConnectAPI == null) {
             getLogger().warning("InterConnect is not installed or not enabled!");
             return;
         }
-        
-        // Check if connected
+
         if (interConnectAPI.isConnected()) {
             getLogger().info("Connected to InterConnect network as: " + interConnectAPI.getServerName());
         }
@@ -33,12 +39,9 @@ public class MyPlugin extends JavaPlugin {
 }
 ```
 
-## API Methods
+## Connection Management
 
-### Connection Management
-
-#### `isConnected()`
-Check if connected to the InterConnect-Server.
+### `isConnected()`
 
 ```java
 if (interConnectAPI.isConnected()) {
@@ -46,8 +49,7 @@ if (interConnectAPI.isConnected()) {
 }
 ```
 
-#### `connect()`
-Manually connect to the InterConnect-Server.
+### `connect()`
 
 ```java
 if (!interConnectAPI.isConnected()) {
@@ -55,97 +57,107 @@ if (!interConnectAPI.isConnected()) {
 }
 ```
 
-#### `disconnect()`
-Disconnect from the InterConnect-Server.
+### `disconnect()`
 
 ```java
 interConnectAPI.disconnect();
 ```
 
-### Sending Messages
+## Sending Messages
 
-#### `broadcastMessage(String eventType, String message)`
-Broadcast a simple text message to all connected servers.
+### `isSupportedEventType(String eventType)`
+
+Use this before sending if the event type may vary.
 
 ```java
-interConnectAPI.broadcastMessage("announcement", "Server will restart in 5 minutes!");
+if (interConnectAPI.isSupportedEventType("player_message")) {
+    // Safe to send
+}
 ```
 
-#### `broadcastJson(String eventType, JSONObject data)`
-Broadcast a JSON object to all connected servers.
+### `broadcastMessage(String eventType, String message)`
+
+This helper is for text-style events only. It currently supports:
+
+- `player_message`
+- `player_chat`
+
+```java
+interConnectAPI.broadcastMessage("player_message", "Server will restart in 5 minutes!");
+```
+
+### `broadcastJson(String eventType, JSONObject data)`
+
+Use this when you need full control over the payload shape for one of the supported event types.
 
 ```java
 import org.json.JSONObject;
 
 JSONObject data = new JSONObject();
-data.put("action", "warp");
-data.put("target", "spawn");
-data.put("player", player.getName());
+data.put("playerName", player.getName());
+data.put("text", "Hello from another server");
 
-interConnectAPI.broadcastJson("custom_warp", data);
+interConnectAPI.broadcastJson("player_message", data);
 ```
 
-#### `sendToServer(String targetUuid, String eventType, JSONObject data)`
-Send a message to a specific server.
+### `sendToServer(String targetUuid, String eventType, JSONObject data)`
+
+Send a supported event type to a specific node UUID.
 
 ```java
 String targetServerUuid = "550e8400-e29b-41d4-a716-446655440000";
 
 JSONObject data = new JSONObject();
-data.put("message", "Hello specific server!");
+data.put("playerName", "Console");
+data.put("text", "Hello specific server!");
 
-interConnectAPI.sendToServer(targetServerUuid, "private_message", data);
+interConnectAPI.sendToServer(targetServerUuid, "player_message", data);
 ```
 
-#### `broadcastPlayerEvent(String eventType, Player player, JSONObject additionalData)`
-Broadcast a player-related event.
+### `broadcastPlayerEvent(String eventType, Player player, JSONObject additionalData)`
+
+Use this for supported player-related event types.
 
 ```java
 JSONObject extra = new JSONObject();
-extra.put("level", 50);
-extra.put("class", "Warrior");
+extra.put("text", "Hello network");
 
-interConnectAPI.broadcastPlayerEvent("player_levelup", player, extra);
+interConnectAPI.broadcastPlayerEvent("player_message", player, extra);
 ```
 
-### Receiving Messages
+## Receiving Messages
 
-#### `registerMessageListener(MessageListener listener)`
-Register a listener to receive messages from other servers.
+### `registerMessageListener(MessageListener listener)`
+
+Listeners receive forwarded server events. Internal heartbeat packets are no longer exposed to listeners.
 
 ```java
 import com.cloudweave.yunzhi.interconnect.api.MessageListener;
 import org.json.JSONObject;
 
 public class MyMessageListener implements MessageListener {
-    
+
     @Override
-    public void onMessageReceived(String fromServer, String fromUuid, 
+    public void onMessageReceived(String fromServer, String fromUuid,
                                   String eventType, JSONObject data) {
-        
-        getLogger().info("Received " + eventType + " from " + fromServer);
-        
-        if ("custom_warp".equals(eventType)) {
-            String action = data.getString("action");
-            String target = data.getString("target");
-            String playerName = data.getString("player");
-            
-            // Handle the warp request
+
+        if ("player_message".equals(eventType)) {
+            String playerName = data.optString("playerName", "Unknown");
+            String text = data.optString("text", "");
+            getLogger().info("[" + fromServer + "] " + playerName + ": " + text);
         }
     }
-    
+
     @Override
     public int getPriority() {
-        return 10; // Higher priority listeners are called first
+        return 10;
     }
 }
 
-// Register the listener
 interConnectAPI.registerMessageListener(new MyMessageListener());
 ```
 
-#### `unregisterMessageListener(MessageListener listener)`
-Unregister a previously registered listener.
+### `unregisterMessageListener(MessageListener listener)`
 
 ```java
 MyMessageListener listener = new MyMessageListener();
@@ -155,32 +167,21 @@ interConnectAPI.registerMessageListener(listener);
 interConnectAPI.unregisterMessageListener(listener);
 ```
 
-### Utility Methods
+## Utility Methods
 
-#### `getServerName()`
-Get the configured server name.
+### `getServerName()`
 
-```java
-String myServerName = interConnectAPI.getServerName();
-```
+Returns the plugin's configured node label. The actual source name seen by other servers is determined by the `servername` registered on InterConnect-Server for the current UUID/token.
 
-#### `getVersion()`
-Get the InterConnect plugin version.
+### `getVersion()`
 
-```java
-String version = interConnectAPI.getVersion();
-```
+Returns the InterConnect plugin version.
 
-#### `isDebugMode()` / `debug(String message)`
-Check debug mode and log debug messages.
+### `isDebugMode()` / `debug(String message)`
 
-```java
-if (interConnectAPI.isDebugMode()) {
-    interConnectAPI.debug("This is a debug message");
-}
-```
+Use these for plugin-side diagnostics.
 
-## Complete Example
+## Example
 
 ```java
 package com.example.myplugin;
@@ -192,54 +193,50 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
 public class MyPlugin extends JavaPlugin implements MessageListener {
-    
+
     private InterConnectAPI api;
-    
+
     @Override
     public void onEnable() {
         api = InterConnectAPI.getInstance();
-        
+
         if (api != null) {
             api.registerMessageListener(this);
-            getLogger().info("Registered with InterConnect!");
         }
     }
-    
+
     @Override
     public void onDisable() {
         if (api != null) {
             api.unregisterMessageListener(this);
         }
     }
-    
-    // Send a cross-server teleport request
-    public void sendTeleportRequest(Player player, String targetServer) {
-        if (api == null || !api.isConnected()) return;
-        
+
+    public void sendNetworkMessage(Player player, String text) {
+        if (api == null || !api.isConnected()) {
+            return;
+        }
+
         JSONObject data = new JSONObject();
         data.put("playerName", player.getName());
         data.put("playerUuid", player.getUniqueId().toString());
-        data.put("targetServer", targetServer);
-        
-        api.broadcastJson("teleport_request", data);
+        data.put("text", text);
+
+        api.broadcastJson("player_message", data);
     }
-    
-    // Handle incoming messages
+
     @Override
-    public void onMessageReceived(String fromServer, String fromUuid, 
+    public void onMessageReceived(String fromServer, String fromUuid,
                                   String eventType, JSONObject data) {
-        
-        if ("teleport_request".equals(eventType)) {
-            String playerName = data.getString("playerName");
-            String targetServer = data.getString("targetServer");
-            
-            if (targetServer.equals(api.getServerName())) {
-                getLogger().info("Player " + playerName + " wants to teleport here from " + fromServer);
-                // Handle the teleport on this server
-            }
+        if (!"player_message".equals(eventType)) {
+            return;
         }
+
+        String playerName = data.optString("playerName", "Unknown");
+        String text = data.optString("text", "");
+        getLogger().info("[" + fromServer + "] " + playerName + ": " + text);
     }
-    
+
     @Override
     public int getPriority() {
         return 5;
@@ -247,49 +244,29 @@ public class MyPlugin extends JavaPlugin implements MessageListener {
 }
 ```
 
-## Event Types Reference
-
-### Built-in Event Types
-
-| Event Type | Description |
-|-----------|-------------|
-| `player_join` | Player joined a server |
-| `player_quit` | Player left a server |
-| `player_death` | Player died |
-| `player_chat` | Player sent a chat message |
-| `player_message` | Player sent a message |
-
-### Custom Event Types
-
-You can define your own event types. Use a prefix to avoid conflicts:
-- Good: `myplugin_warp`, `myplugin_shop_purchase`
-- Bad: `warp`, `purchase`
-
 ## Best Practices
 
-1. **Always check for null**: InterConnectAPI.getInstance() may return null if the plugin is not loaded.
-
-2. **Check connection status**: Always verify `isConnected()` before sending messages.
-
-3. **Handle exceptions**: Wrap API calls in try-catch blocks to prevent your plugin from crashing.
-
-4. **Use unique event types**: Prefix custom events with your plugin name to avoid conflicts.
-
-5. **Clean up**: Unregister listeners in your plugin's `onDisable()` method.
-
-6. **Don't block**: Message listeners are called on the main server thread. Offload heavy processing to async tasks.
+1. Always null-check `InterConnectAPI.getInstance()`.
+2. Check `isConnected()` before sending.
+3. Validate dynamic event names with `isSupportedEventType(...)`.
+4. Use payload keys that match the built-in event handlers.
+5. Unregister listeners in `onDisable()`.
+6. Keep message listeners lightweight because they run on the main thread.
 
 ## Troubleshooting
 
 ### API returns null
-- Make sure InterConnect is installed and enabled
-- Check your plugin's load order: `depend: [InterConnect-Client-Spigot]` in plugin.yml
 
-### Messages not being received
-- Verify both servers are connected to the InterConnect-Server
-- Check that event types match exactly (case-sensitive)
-- Enable debug mode to see received messages in console
+- Make sure InterConnect is installed and enabled.
+- Add `depend: [InterConnect-Client-Spigot]` in your plugin's `plugin.yml`.
 
-### High CPU usage
-- Avoid heavy processing in message listeners
-- Use async tasks for database operations or HTTP requests
+### Messages are not received
+
+- Verify both servers are connected to InterConnect-Server.
+- Verify the event type is one of the five supported types.
+- Enable debug mode to inspect incoming packets.
+
+### Message was sent but looked wrong on the receiving server
+
+- Check that the payload keys match the event type.
+- For `player_message` and `player_chat`, include `playerName` and `text`.

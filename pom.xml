@@ -7,7 +7,7 @@
 
     <groupId>com.cloudweave.yunzhi</groupId>
     <artifactId>ICC-Spigot</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>InterConnect-Client-Spigot</name>

@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * to enable cross-server player event synchronization.
  * 
  * @author CloudWeave-YunZhi
- * @version 1.0.0
+ * @version 1.1.0
  */
 public class InterConnectPlugin extends JavaPlugin {
 

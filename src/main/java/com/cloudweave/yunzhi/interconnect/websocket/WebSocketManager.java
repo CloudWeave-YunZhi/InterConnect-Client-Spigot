@@ -18,8 +18,13 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
 
 import java.net.URI;
-import java.util.*;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -35,7 +40,7 @@ public class WebSocketManager {
     private volatile boolean isAlive = true;
     private int heartbeatTaskId = -1;
 
-    // Message listeners for custom events
+    // Message listeners for forwarded server events
     private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
 
     // Supported event types
@@ -44,12 +49,13 @@ public class WebSocketManager {
     public static final String EVENT_PLAYER_DEATH = "player_death";
     public static final String EVENT_PLAYER_CHAT = "player_chat";
     public static final String EVENT_PLAYER_MESSAGE = "player_message";
+    private static final String EVENT_HEARTBEAT = "heartbeat";
 
-    // Built-in event types set
-    private static final Set<String> BUILTIN_EVENTS = new HashSet<>(Arrays.asList(
+    // InterConnect-Server currently forwards only these event types.
+    private static final Set<String> SUPPORTED_EVENTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
         EVENT_PLAYER_JOIN, EVENT_PLAYER_QUIT, EVENT_PLAYER_DEATH, 
         EVENT_PLAYER_CHAT, EVENT_PLAYER_MESSAGE
-    ));
+    )));
 
     public WebSocketManager(InterConnectPlugin plugin) {
         this.plugin = plugin;
@@ -213,6 +219,12 @@ public class WebSocketManager {
             return false;
         }
 
+        if (!isSupportedEventType(type)) {
+            plugin.getLogger().warning("Failed to send message: unsupported event type '" + type + "'");
+            plugin.getConfigManager().debug("InterConnect-Server currently supports: " + SUPPORTED_EVENTS);
+            return false;
+        }
+
         try {
             JSONObject packet = new JSONObject();
             packet.put("type", type);
@@ -250,10 +262,15 @@ public class WebSocketManager {
     private void handleIncomingMessage(String message) {
         try {
             JSONObject packet = new JSONObject(message);
-            
+            String type = packet.optString("type", "");
+
+            if (EVENT_HEARTBEAT.equals(type)) {
+                plugin.getConfigManager().debug("Received heartbeat from InterConnect-Server");
+                return;
+            }
+
             String fromId = packet.optString("fromId", "unknown");
             String fromName = packet.optString("fromName", "Unknown Server");
-            String type = packet.optString("type", "");
             JSONObject msgData = packet.optJSONObject("msg");
 
             plugin.getConfigManager().debug("Received message from " + fromName + " [" + fromId + "]: " + type);
@@ -261,8 +278,7 @@ public class WebSocketManager {
             // Notify custom listeners first
             notifyMessageListeners(fromName, fromId, type, msgData);
 
-            // Skip if it's a built-in event type
-            if (BUILTIN_EVENTS.contains(type)) {
+            if (SUPPORTED_EVENTS.contains(type)) {
                 // Handle built-in events
                 switch (type) {
                     case EVENT_PLAYER_JOIN:
@@ -412,5 +428,12 @@ public class WebSocketManager {
         } else {
             return "§cDisconnected";
         }
+    }
+    public static boolean isSupportedEventType(String eventType) {
+        return eventType != null && SUPPORTED_EVENTS.contains(eventType);
+    }
+
+    public static Set<String> getSupportedEventTypes() {
+        return SUPPORTED_EVENTS;
     }
 }

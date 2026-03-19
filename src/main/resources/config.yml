@@ -47,8 +47,9 @@ server:
   # WARNING: Keep this secret! Treat it like a password.
   token: ""
   
-  # Display name for your server (shown in cross-server messages)
-  # This should match the servername used when registering the node
+  # Local node label used by the plugin for status output and payload metadata
+  # The actual cross-server source name comes from the servername registered
+  # on InterConnect-Server for this UUID/token pair.
   name: "MyServer"
   
   # Automatically connect to InterConnect-Server on plugin enable
@@ -102,7 +103,9 @@ api:
   # Enable the public API for other plugins
   enabled: true
   
-  # Allow other plugins to send custom messages
+  # Other plugins are limited to the event types currently supported by
+  # InterConnect-Server: player_join, player_quit, player_death,
+  # player_chat, player_message
   allow-custom-messages: true
 
 # =============================================

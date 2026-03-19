@@ -1,8 +1,8 @@
 /*
- * Example Plugin demonstrating InterConnect API usage
- * 
- * This is a complete example showing how to use the InterConnect API
- * to send and receive messages between Minecraft servers.
+ * Example Plugin demonstrating InterConnect API usage.
+ *
+ * This example only uses event types that are currently forwarded by
+ * InterConnect-Server.
  */
 
 package com.example.interconnectdemo;
@@ -19,223 +19,121 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
 /**
- * Example plugin showing InterConnect integration
+ * Example plugin showing InterConnect integration.
  */
 public class ExamplePlugin extends JavaPlugin implements Listener, MessageListener {
 
     private InterConnectAPI interConnect;
-    
+
     @Override
     public void onEnable() {
-        // Get the InterConnect API instance
         interConnect = InterConnectAPI.getInstance();
-        
+
         if (interConnect == null) {
             getLogger().warning("InterConnect is not installed! This plugin requires InterConnect.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        
-        getLogger().info("InterConnect found! Version: " + interConnect.getVersion());
-        
-        // Register as a message listener to receive cross-server messages
+
         interConnect.registerMessageListener(this);
-        
-        // Register Bukkit events
         getServer().getPluginManager().registerEvents(this, this);
-        
-        getLogger().info("ExamplePlugin enabled!");
+        getLogger().info("ExamplePlugin enabled with InterConnect " + interConnect.getVersion());
     }
-    
+
     @Override
     public void onDisable() {
         if (interConnect != null) {
-            // Unregister the listener
             interConnect.unregisterMessageListener(this);
         }
-        getLogger().info("ExamplePlugin disabled!");
     }
-    
-    /**
-     * Handle incoming messages from other servers
-     */
+
     @Override
-    public void onMessageReceived(String fromServer, String fromUuid, 
+    public void onMessageReceived(String fromServer, String fromUuid,
                                   String eventType, JSONObject data) {
-        
-        getLogger().info("Received message from " + fromServer + 
-                        " [" + fromUuid + "]: " + eventType);
-        
-        // Handle custom teleport request
-        if ("example_teleport".equals(eventType)) {
-            String playerName = data.optString("playerName", "Unknown");
-            String targetLocation = data.optString("target", "unknown");
-            
-            getLogger().info("Player " + playerName + " wants to teleport to " + 
-                           targetLocation + " from server " + fromServer);
-            
-            // You would implement actual teleport logic here
+        if (!"player_message".equals(eventType)) {
+            return;
         }
-        
-        // Handle custom broadcast
-        if ("example_broadcast".equals(eventType)) {
-            String message = data.optString("message", "");
-            String sender = data.optString("sender", "Unknown");
-            
-            // Broadcast to all players on this server
-            getServer().broadcastMessage("§7[§b" + fromServer + "§7] §f" + 
-                                       sender + "§7: §f" + message);
-        }
+
+        String sender = data.optString("playerName", "Unknown");
+        String text = data.optString("text", "");
+        getLogger().info("Received from " + fromServer + " [" + fromUuid + "]: " + sender + " -> " + text);
     }
-    
-    /**
-     * Set message listener priority (higher = called first)
-     */
+
     @Override
     public int getPriority() {
         return 10;
     }
-    
-    /**
-     * Example: Send a message when a player joins
-     */
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (interConnect == null || !interConnect.isConnected()) {
             return;
         }
-        
-        Player player = event.getPlayer();
-        
-        // Send a custom event to all connected servers
+
         JSONObject data = new JSONObject();
-        data.put("playerName", player.getName());
-        data.put("uuid", player.getUniqueId().toString());
-        data.put("firstJoin", !player.hasPlayedBefore());
-        
-        boolean sent = interConnect.broadcastJson("example_player_join", data);
-        
+        data.put("playerName", event.getPlayer().getName());
+        data.put("text", event.getPlayer().getName() + " joined this server");
+
+        boolean sent = interConnect.broadcastJson("player_message", data);
         if (sent) {
-            getLogger().info("Broadcast join event for " + player.getName());
+            getLogger().info("Broadcasted join notice for " + event.getPlayer().getName());
         }
     }
-    
-    /**
-     * Example commands
-     */
+
     @Override
-    public boolean onCommand(CommandSender sender, Command command, 
-                           String label, String[] args) {
-        
+    public boolean onCommand(CommandSender sender, Command command,
+                             String label, String[] args) {
         if (interConnect == null) {
             sender.sendMessage("§cInterConnect is not available!");
             return true;
         }
-        
+
         switch (command.getName().toLowerCase()) {
             case "broadcastserver":
                 return handleBroadcastCommand(sender, args);
-            case "requestteleport":
-                return handleTeleportCommand(sender, args);
             case "icstatus":
                 return handleStatusCommand(sender);
             default:
                 return false;
         }
     }
-    
-    /**
-     * Broadcast a message to all servers
-     */
+
     private boolean handleBroadcastCommand(CommandSender sender, String[] args) {
         if (args.length < 1) {
             sender.sendMessage("§cUsage: /broadcastserver <message>");
             return true;
         }
-        
+
         if (!interConnect.isConnected()) {
             sender.sendMessage("§cNot connected to InterConnect network!");
             return true;
         }
-        
+
         String message = String.join(" ", args);
-        String senderName = sender instanceof Player ? 
-                           ((Player) sender).getName() : "Console";
-        
+        String senderName = sender instanceof Player
+            ? ((Player) sender).getName()
+            : "Console";
+
         JSONObject data = new JSONObject();
-        data.put("message", message);
-        data.put("sender", senderName);
-        
-        boolean sent = interConnect.broadcastJson("example_broadcast", data);
-        
-        if (sent) {
-            sender.sendMessage("§aMessage broadcasted to all servers!");
-        } else {
-            sender.sendMessage("§cFailed to broadcast message.");
-        }
-        
+        data.put("playerName", senderName);
+        data.put("text", message);
+
+        boolean sent = interConnect.broadcastJson("player_message", data);
+        sender.sendMessage(sent ? "§aMessage broadcasted to all servers!" : "§cFailed to broadcast message.");
         return true;
     }
-    
-    /**
-     * Request a teleport to another server's location
-     */
-    private boolean handleTeleportCommand(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("§cThis command can only be used by players!");
-            return true;
-        }
-        
-        if (args.length < 1) {
-            sender.sendMessage("§cUsage: /requestteleport <target>");
-            sender.sendMessage("§cExample: /requestteleport spawn");
-            return true;
-        }
-        
-        if (!interConnect.isConnected()) {
-            sender.sendMessage("§cNot connected to InterConnect network!");
-            return true;
-        }
-        
-        Player player = (Player) sender;
-        String target = args[0];
-        
-        JSONObject data = new JSONObject();
-        data.put("playerName", player.getName());
-        data.put("playerUuid", player.getUniqueId().toString());
-        data.put("target", target);
-        data.put("requestTime", System.currentTimeMillis());
-        
-        boolean sent = interConnect.broadcastJson("example_teleport", data);
-        
-        if (sent) {
-            player.sendMessage("§aTeleport request sent to all servers!");
-        } else {
-            player.sendMessage("§cFailed to send teleport request.");
-        }
-        
-        return true;
-    }
-    
-    /**
-     * Check InterConnect status
-     */
+
     private boolean handleStatusCommand(CommandSender sender) {
         sender.sendMessage("§6=== InterConnect Status ===");
         sender.sendMessage("§eConnected: " + (interConnect.isConnected() ? "§aYes" : "§cNo"));
-        sender.sendMessage("§eServer Name: §f" + interConnect.getServerName());
+        sender.sendMessage("§eConfigured Node Name: §f" + interConnect.getServerName());
         sender.sendMessage("§ePlugin Version: §f" + interConnect.getVersion());
-        
+
         if (interConnect.isConnected()) {
-            // Send a test message
-            JSONObject testData = new JSONObject();
-            testData.put("test", true);
-            testData.put("timestamp", System.currentTimeMillis());
-            
-            boolean testSent = interConnect.broadcastJson("example_test", testData);
-            sender.sendMessage("§eTest message: " + (testSent ? "§aSent" : "§cFailed"));
+            boolean supported = interConnect.isSupportedEventType("player_message");
+            sender.sendMessage("§eplayer_message supported: " + (supported ? "§aYes" : "§cNo"));
         }
-        
+
         return true;
     }
 }
