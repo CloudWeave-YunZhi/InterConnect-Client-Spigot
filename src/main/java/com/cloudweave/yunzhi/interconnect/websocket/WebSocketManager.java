@@ -13,7 +13,9 @@ package com.cloudweave.yunzhi.interconnect.websocket;
 import com.cloudweave.yunzhi.interconnect.InterConnectPlugin;
 import com.cloudweave.yunzhi.interconnect.api.MessageListener;
 import org.bukkit.Bukkit;
+import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
 
@@ -39,6 +41,8 @@ public class WebSocketManager {
     private int reconnectAttempts = 0;
     private volatile boolean isAlive = true;
     private int heartbeatTaskId = -1;
+    private volatile boolean manualDisconnect = false;
+    private volatile boolean reconnectScheduled = false;
 
     // Message listeners for forwarded server events
     private final List<MessageListener> messageListeners = new CopyOnWriteArrayList<>();
@@ -65,6 +69,13 @@ public class WebSocketManager {
      * Connect to the InterConnect-Server WebSocket
      */
     public void connect() {
+        if (!Bukkit.isPrimaryThread()) {
+            runSync(this::connect);
+            return;
+        }
+
+        manualDisconnect = false;
+
         if (connected || webSocketClient != null) {
             plugin.getLogger().warning("Already connected or connecting!");
             return;
@@ -88,9 +99,11 @@ public class WebSocketManager {
             webSocketClient = new WebSocketClient(new URI(serverUrl), headers) {
                 @Override
                 public void onOpen(ServerHandshake handshake) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    runSync(() -> {
                         connected = true;
                         reconnectAttempts = 0;
+                        reconnectScheduled = false;
+                        isAlive = true;
                         plugin.getLogger().info("Successfully connected to InterConnect-Server!");
                         plugin.getLogger().info("Server: " + serverUrl);
                         startHeartbeat();
@@ -99,15 +112,23 @@ public class WebSocketManager {
 
                 @Override
                 public void onMessage(String message) {
-                    isAlive = true;
-                    Bukkit.getScheduler().runTask(plugin, () -> handleIncomingMessage(message));
+                    runSync(() -> {
+                        isAlive = true;
+                        handleIncomingMessage(message);
+                    });
+                }
+
+                @Override
+                public void onWebsocketPong(WebSocket conn, Framedata f) {
+                    runSync(() -> isAlive = true);
                 }
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    runSync(() -> {
                         connected = false;
-                        webSocketClient = null;  // 清理引用，允许重新连接
+                        webSocketClient = null;
+                        reconnectScheduled = false;
                         stopHeartbeat();
                         if (remote) {
                             plugin.getLogger().warning("Connection closed by server. Code: " + code + ", Reason: " + reason);
@@ -116,7 +137,7 @@ public class WebSocketManager {
                         }
                         
                         // Attempt reconnection if enabled
-                        if (plugin.getConfigManager().isAutoConnect()) {
+                        if (shouldAutoReconnect()) {
                             scheduleReconnect();
                         }
                     });
@@ -124,7 +145,7 @@ public class WebSocketManager {
 
                 @Override
                 public void onError(Exception ex) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    runSync(() -> {
                         plugin.getLogger().warning("WebSocket error: " + ex.getMessage());
                         plugin.getConfigManager().debug("WebSocket error details: " + ex);
                     });
@@ -136,7 +157,7 @@ public class WebSocketManager {
 
         } catch (Exception e) {
             plugin.getLogger().severe("Failed to create WebSocket connection: " + e.getMessage());
-            if (plugin.getConfigManager().isAutoConnect()) {
+            if (shouldAutoReconnect()) {
                 scheduleReconnect();
             }
         }
@@ -146,6 +167,17 @@ public class WebSocketManager {
      * Disconnect from the WebSocket server
      */
     public void disconnect() {
+        disconnectInternal(true);
+    }
+
+    private void disconnectInternal(boolean manual) {
+        if (!Bukkit.isPrimaryThread()) {
+            runSync(() -> disconnectInternal(manual));
+            return;
+        }
+
+        manualDisconnect = manual;
+        reconnectScheduled = false;
         stopHeartbeat();
         if (webSocketClient != null) {
             try {
@@ -173,10 +205,7 @@ public class WebSocketManager {
             
             if (!isAlive) {
                 plugin.getLogger().warning("WebSocket heartbeat timeout, reconnecting...");
-                disconnect();
-                if (plugin.getConfigManager().isAutoConnect()) {
-                    scheduleReconnect();
-                }
+                disconnectInternal(false);
                 return;
             }
             
@@ -397,6 +426,20 @@ public class WebSocketManager {
      * Schedule a reconnection attempt
      */
     private void scheduleReconnect() {
+        if (!Bukkit.isPrimaryThread()) {
+            runSync(this::scheduleReconnect);
+            return;
+        }
+
+        if (!shouldAutoReconnect()) {
+            return;
+        }
+
+        if (reconnectScheduled) {
+            plugin.getConfigManager().debug("Reconnect already scheduled, skipping duplicate request.");
+            return;
+        }
+
         int maxAttempts = plugin.getConfigManager().getReconnectMaxAttempts();
         
         if (reconnectAttempts >= maxAttempts && maxAttempts > 0) {
@@ -406,10 +449,12 @@ public class WebSocketManager {
 
         reconnectAttempts++;
         int interval = plugin.getConfigManager().getReconnectInterval();
+        reconnectScheduled = true;
         
         plugin.getLogger().info("Attempting to reconnect in " + interval + " seconds... (Attempt " + reconnectAttempts + ")");
 
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            reconnectScheduled = false;
             // 双重检查：只有真正未连接且没有正在连接的客户端时才连接
             if (!connected && webSocketClient == null) {
                 connect();
@@ -436,4 +481,23 @@ public class WebSocketManager {
     public static Set<String> getSupportedEventTypes() {
         return SUPPORTED_EVENTS;
     }
+
+    private boolean shouldAutoReconnect() {
+        return plugin.isEnabled() && plugin.getConfigManager().isAutoConnect() && !manualDisconnect;
+    }
+
+    private void runSync(Runnable task) {
+        if (!plugin.isEnabled()) {
+            return;
+        }
+
+        if (Bukkit.isPrimaryThread()) {
+            task.run();
+            return;
+        }
+
+        Bukkit.getScheduler().runTask(plugin, task);
+    }
 }
+
+

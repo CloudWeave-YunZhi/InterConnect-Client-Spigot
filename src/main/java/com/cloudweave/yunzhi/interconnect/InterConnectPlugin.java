@@ -104,7 +104,7 @@ public class InterConnectPlugin extends JavaPlugin {
 
         // Connect to WebSocket server if auto-connect is enabled
         if (configManager.isAutoConnect()) {
-            getServer().getScheduler().runTaskLaterAsynchronously(this, () -> {
+            getServer().getScheduler().runTaskLater(this, () -> {
                 webSocketManager.connect();
             }, 20L); // Delay 1 second to let server fully start
         }
