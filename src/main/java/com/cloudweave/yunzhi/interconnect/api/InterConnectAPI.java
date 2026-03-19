@@ -96,8 +96,9 @@ public class InterConnectAPI {
         }
 
         if (!WebSocketManager.EVENT_PLAYER_MESSAGE.equals(eventType)
-            && !WebSocketManager.EVENT_PLAYER_CHAT.equals(eventType)) {
-            plugin.getLogger().warning("broadcastMessage only supports player_message or player_chat");
+            && !WebSocketManager.EVENT_PLAYER_CHAT.equals(eventType)
+            && !WebSocketManager.EVENT_QQ_MESSAGE.equals(eventType)) {
+            plugin.getLogger().warning("broadcastMessage only supports player_message, player_chat or qq_message");
             return false;
         }
 
@@ -152,7 +153,7 @@ public class InterConnectAPI {
     /**
      * Broadcast a player-related event to all connected servers.
      * 
-     * @param eventType The event type (player_join, player_quit, player_death, player_chat, player_message)
+     * @param eventType The event type (player_join, player_quit, player_death, player_chat, player_message, qq_message)
      * @param player The player involved in the event
      * @param additionalData Additional data to include in the broadcast
      * @return true if the message was sent successfully

@@ -53,12 +53,13 @@ public class WebSocketManager {
     public static final String EVENT_PLAYER_DEATH = "player_death";
     public static final String EVENT_PLAYER_CHAT = "player_chat";
     public static final String EVENT_PLAYER_MESSAGE = "player_message";
+    public static final String EVENT_QQ_MESSAGE = "qq_message";
     private static final String EVENT_HEARTBEAT = "heartbeat";
 
     // InterConnect-Server currently forwards only these event types.
     private static final Set<String> SUPPORTED_EVENTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
         EVENT_PLAYER_JOIN, EVENT_PLAYER_QUIT, EVENT_PLAYER_DEATH, 
-        EVENT_PLAYER_CHAT, EVENT_PLAYER_MESSAGE
+        EVENT_PLAYER_CHAT, EVENT_PLAYER_MESSAGE, EVENT_QQ_MESSAGE
     )));
 
     public WebSocketManager(InterConnectPlugin plugin) {
@@ -321,6 +322,7 @@ public class WebSocketManager {
                         break;
                     case EVENT_PLAYER_CHAT:
                     case EVENT_PLAYER_MESSAGE:
+                    case EVENT_QQ_MESSAGE:
                         handlePlayerMessage(fromName, msgData);
                         break;
                 }
